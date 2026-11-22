@@ -9,6 +9,12 @@ import {
   logDebug,
 } from "@/app/lib/utils";
 
+/**
+ * An error the server answered with on purpose, like a missing API key.
+ * Its message is already meant for the user, so it's shown as it is.
+ */
+class ServerError extends Error {}
+
 // Simple in-memory cache for recent queries
 const responseCache = new Map<string, { data: AIResult; timestamp: number }>();
 
@@ -76,7 +82,7 @@ export async function fetchAIResponse(
 
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
-      throw new Error(
+      throw new ServerError(
         errorData.message || `Server error: ${res.status} ${res.statusText}`
       );
     }
@@ -89,6 +95,11 @@ export async function fetchAIResponse(
 
     return data;
   } catch (error: any) {
+    // retrying won't help, and the generic message would hide what's wrong
+    if (error instanceof ServerError) {
+      throw error;
+    }
+
     const errorType = categorizeError(error);
 
     // Handle timeout
