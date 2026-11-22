@@ -5,6 +5,7 @@ import type { AIProvider } from "@/app/types/travel.types";
 const OPTIONS: { value: AIProvider; label: string }[] = [
   { value: "openai", label: "OpenAI" },
   { value: "claude", label: "Claude" },
+  { value: "gemini", label: "Gemini (free)" },
 ];
 
 type AIProviderToggleProps = {

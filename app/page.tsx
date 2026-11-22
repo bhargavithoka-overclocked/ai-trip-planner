@@ -50,7 +50,8 @@ export default function Home() {
   // remember which AI was picked last time
   useEffect(() => {
     try {
-      if (localStorage.getItem("aiProvider") === "claude") setProvider("claude");
+      const saved = localStorage.getItem("aiProvider");
+      if (saved === "claude" || saved === "gemini") setProvider(saved);
     } catch {}
   }, []);
 

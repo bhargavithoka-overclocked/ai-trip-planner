@@ -2,7 +2,7 @@
 
 A trip planner. Type where you want to go, answer a couple of quick questions (which cities, your dates, your budget), and you get a plan split into tabs: an overview of the best places, food and areas to stay, a budget breakdown, flights, hotels, food, shopping and a day-by-day itinerary.
 
-The planning is done by an AI model. OpenAI is the default, and you can switch to Claude with the toggle under the search bar.
+The planning is done by an AI model. OpenAI is the default, and you can switch to Claude, or to Gemini's free tier, with the toggle under the search bar.
 
 ![CI](https://github.com/bhargavithoka-overclocked/ai-trip-planner/actions/workflows/ci.yml/badge.svg)
 
@@ -13,7 +13,7 @@ The planning is done by an AI model. OpenAI is the default, and you can switch t
 - **Budget**: flights, hotels, food and activities, with a chart
 - **Flights, Hotels, Food, Shopping**: options for the destination
 - **Trip Planner**: a day-by-day itinerary you can reshuffle
-- Pick **OpenAI or Claude** for the planning
+- Pick **OpenAI, Claude or Gemini** for the planning (Gemini has a free tier)
 - Sign up, log in and a profile page (a demo, see below)
 - Settings for animations and background effects
 - Keyboard shortcuts: Cmd/Ctrl + K to search, arrow keys to switch tabs
@@ -32,6 +32,9 @@ Put your key in `.env.local`, then open http://localhost:3000.
 
 - **OpenAI**: create a key at [platform.openai.com/api-keys](https://platform.openai.com/api-keys) and set `OPENAI_API_KEY`. The API is paid per use and needs credits on the account.
 - **Claude**: create a key in the [Anthropic Console](https://console.anthropic.com) and set `ANTHROPIC_API_KEY`. Then pick Claude under the search bar.
+- **Gemini (free)**: create a key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) with a Google account, no card needed, and set `GEMINI_API_KEY`. Then pick Gemini under the search bar. The free tier has daily limits, and Google may use free-tier requests to improve its products.
+
+If you just want to try the app without paying for anything, use Gemini.
 
 You only need the key for the one you use. If a key is missing, the app tells you which one instead of failing quietly.
 
@@ -42,16 +45,18 @@ search + answers to the questions
         |
    /api/ai  (Next.js route, runs on the server so the keys stay there)
         |
-   OpenAI (gpt-4.1-mini) or Claude (Claude Opus 5.5)
+   OpenAI (gpt-4.1-mini), Claude (Claude Opus 5.5) or Gemini (gemini-3.5-flash-lite)
         |
    JSON plan, checked and cleaned up, then shown in the tabs
 ```
 
-Both models get the same prompt and have to answer in the same JSON shape. The answer is checked before the page uses it: wrong or missing fields get safe defaults, so a slightly off reply from the model can't break the page.
+All three get the same prompt and have to answer in the same JSON shape. The answer is checked before the page uses it: wrong or missing fields get safe defaults, so a slightly off reply from the model can't break the page.
 
 On the browser side, answers are cached for 5 minutes, requests time out after 45 seconds, and timeouts or network errors are retried twice. Errors the server sends on purpose (like a missing key) are shown straight away, without retrying.
 
 **Claude** is called through Anthropic's official SDK with low effort, since the answer is a short JSON object and doesn't need much thinking. If Claude declines a request, the API's fallback setting lets another model answer instead.
+
+**Gemini** goes through Google's official `@google/genai` SDK and is asked for plain JSON. It uses `gemini-3.5-flash-lite` by default, which is in the free tier. Set `GEMINI_MODEL` in `.env.local` to try another model.
 
 ## What's real and what's sample data
 
@@ -74,6 +79,7 @@ app/
     prompt.service.ts      # the prompt for each tab
     openai.service.ts      # OpenAI
     claude.service.ts      # Claude
+    gemini.service.ts      # Gemini
     validation.service.ts  # checks and cleans up the model's answer
     ai.service.ts          # browser side: caching, timeouts, retries
     intake.service.ts      # which questions to ask before searching
@@ -88,7 +94,7 @@ app/
 npm test
 ```
 
-They cover the helper functions, the checks on the model's answer, and how the browser handles errors. They don't call any AI, so no keys are needed.
+They cover the helper functions, the checks on the model's answer, how the browser handles errors, and Gemini's error messages (with the SDK mocked). They don't call any AI, so no keys are needed.
 
 ## Ideas for later
 
