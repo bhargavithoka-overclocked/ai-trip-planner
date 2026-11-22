@@ -6,6 +6,8 @@ The planning is done by an AI model. OpenAI is the default, and you can switch t
 
 ![CI](https://github.com/bhargavithoka-overclocked/ai-trip-planner/actions/workflows/ci.yml/badge.svg)
 
+![Planning five days in Japan](docs/screenshots/overview.jpg)
+
 ## Features
 
 - One search box, with follow-up questions for anything missing (cities, dates, budget)
@@ -17,6 +19,14 @@ The planning is done by an AI model. OpenAI is the default, and you can switch t
 - Sign up, log in and a profile page (a demo, see below)
 - Settings for animations and background effects
 - Keyboard shortcuts: Cmd/Ctrl + K to search, arrow keys to switch tabs
+
+## Screenshots
+
+These use a sample plan for five days in Japan.
+
+| Budget | Day-by-day plan |
+| --- | --- |
+| ![Budget tab](docs/screenshots/budget.jpg) | ![Trip Planner tab](docs/screenshots/planner.jpg) |
 
 ## Running it
 
