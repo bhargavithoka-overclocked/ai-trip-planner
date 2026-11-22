@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, Suspense, lazy } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search } from "lucide-react";
 import { TABS } from "./constants/tabs";
-import { Tab, AIResult, TravelIntake } from "./types/travel.types";
+import { Tab, AIResult, TravelIntake, AIProvider } from "./types/travel.types";
 import { fetchAIResponse } from "./services/ai.service";
 import { SparkleBackground } from "./components/common/SparkleBackground";
 import { Recommendations } from "./components/common/Recommendations";
 import { IntakeDialog } from "./components/common/IntakeDialog";
 import { ProfileButton } from "./components/common/ProfileButton";
 import { SettingsDropdown } from "./components/common/SettingsDropdown";
+import { AIProviderToggle } from "./components/common/AIProviderToggle";
 import {
   detectMissingFields,
   mergeIntakeResponses,
@@ -41,6 +42,24 @@ export default function Home() {
   const [intakeData, setIntakeData] = useState<TravelIntake>({});
   const [missingQuestions, setMissingQuestions] = useState<any[]>([]);
   const [retryAttempt, setRetryAttempt] = useState(0);
+  const [provider, setProvider] = useState<AIProvider>("openai");
+  // the search callbacks below read this, so they always use the current choice
+  const providerRef = useRef<AIProvider>("openai");
+  providerRef.current = provider;
+
+  // remember which AI was picked last time
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("aiProvider") === "claude") setProvider("claude");
+    } catch {}
+  }, []);
+
+  const changeProvider = useCallback((next: AIProvider) => {
+    setProvider(next);
+    try {
+      localStorage.setItem("aiProvider", next);
+    } catch {}
+  }, []);
 
   // Add keyboard shortcut support for tab navigation
   useEffect(() => {
@@ -119,7 +138,7 @@ export default function Home() {
       try {
         // Build a comprehensive query from intake data
         const enhancedQuery = buildQueryFromIntake(intake, query);
-        const data = await fetchAIResponse(enhancedQuery, "Overview");
+        const data = await fetchAIResponse(enhancedQuery, "Overview", providerRef.current);
         setAiResult(data);
         setActiveTab("Overview");
         setRetryAttempt(0);
@@ -142,7 +161,7 @@ export default function Home() {
     setLoading(true);
     setError(null);
     
-    fetchAIResponse(enhancedQuery, "Overview")
+    fetchAIResponse(enhancedQuery, "Overview", providerRef.current)
       .then(data => {
         setAiResult(data);
         setActiveTab("Overview");
@@ -310,6 +329,7 @@ export default function Home() {
                 )}
               </div>
             </div>
+            <AIProviderToggle value={provider} onChange={changeProvider} />
           </motion.div>
 
           {/* Date Range Display */}

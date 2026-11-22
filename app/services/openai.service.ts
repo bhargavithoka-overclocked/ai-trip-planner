@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { buildPrompt } from "./prompt.service";
-import { validateAIResponse } from "./validation.service";
+import { parseModelJson, validateAIResponse } from "./validation.service";
 import { AIResult } from "@/app/types/travel.types";
 
 /**
@@ -43,17 +43,5 @@ export async function callOpenAI(
     ],
   });
 
-  const text = response.output_text || "{}";
-
-  // Clean possible markdown wrappers
-  let cleanText = text.trim();
-  if (cleanText.startsWith("```")) {
-    cleanText = cleanText
-      .replace(/^```json\n?/, "")
-      .replace(/^```\n?/, "")
-      .replace(/\n?```$/, "");
-  }
-
-  const parsedJson = JSON.parse(cleanText);
-  return validateAIResponse(parsedJson);
+  return validateAIResponse(parseModelJson(response.output_text));
 }

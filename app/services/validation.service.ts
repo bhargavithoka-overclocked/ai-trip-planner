@@ -12,6 +12,15 @@ const DEFAULT_RESULT: AIResult = {
   recommendations: [],
 };
 
+/** Models sometimes wrap their JSON in a markdown code block. */
+export function parseModelJson(text: string): unknown {
+  let clean = (text || "{}").trim();
+  if (clean.startsWith("```")) {
+    clean = clean.replace(/^```(json)?\n?/, "").replace(/\n?```$/, "");
+  }
+  return JSON.parse(clean);
+}
+
 export function validateAIResponse(data: any): AIResult {
   try {
     return {

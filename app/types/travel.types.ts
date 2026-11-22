@@ -1,4 +1,6 @@
 import type { LucideIcon } from "lucide-react";
+export type AIProvider = "openai" | "claude";
+
 export type Tab = "Overview" | "Budget" | "Flights" | "Hotels" | "Food" | "Shopping" | "Trip Planner";
 
 export type Budget = {

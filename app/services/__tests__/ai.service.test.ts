@@ -26,3 +26,12 @@ describe("fetchAIResponse", () => {
     await expect(fetchAIResponse("3 days in Rome, again", "Overview")).resolves.toEqual(plan);
   });
 });
+
+describe("fetchAIResponse with Claude", () => {
+  it("tells the server which AI to use", async () => {
+    const fetchMock = mockFetch(200, { summary: "Kyoto", days: 4, budget: {}, recommendations: [] });
+
+    await fetchAIResponse("4 days in Kyoto", "Overview", "claude");
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ query: "4 days in Kyoto", tab: "Overview", provider: "claude" });
+  });
+});

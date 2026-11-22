@@ -1,5 +1,5 @@
 // AI API service with retry logic, timeout handling, and better error messages
-import { AIResult } from "@/app/types/travel.types";
+import { AIProvider, AIResult } from "@/app/types/travel.types";
 import { API_CONFIG } from "@/app/lib/constants";
 import {
   categorizeError,
@@ -54,9 +54,10 @@ const sleep = (ms: number): Promise<void> =>
 export async function fetchAIResponse(
   query: string,
   tab: string,
+  provider: AIProvider = "openai",
   retryCount = 0
 ): Promise<AIResult> {
-  const cacheKey = createCacheKey(tab, query);
+  const cacheKey = createCacheKey(`${provider}:${tab}`, query);
 
   // Check cache first
   const cached = getCachedResponse(cacheKey);
@@ -74,7 +75,7 @@ export async function fetchAIResponse(
     const res = await fetch("/api/ai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, tab }),
+      body: JSON.stringify({ query, tab, provider }),
       signal: controller.signal,
     });
 
@@ -109,7 +110,7 @@ export async function fetchAIResponse(
           `[TIMEOUT RETRY] Attempt ${retryCount + 1}/${API_CONFIG.MAX_RETRIES}`
         );
         await sleep(API_CONFIG.RETRY_DELAY_MS);
-        return fetchAIResponse(query, tab, retryCount + 1);
+        return fetchAIResponse(query, tab, provider, retryCount + 1);
       }
       throw new Error(getUserFriendlyMessage("timeout"));
     }
@@ -121,7 +122,7 @@ export async function fetchAIResponse(
           `[NETWORK RETRY] Attempt ${retryCount + 1}/${API_CONFIG.MAX_RETRIES}`
         );
         await sleep(API_CONFIG.RETRY_DELAY_MS);
-        return fetchAIResponse(query, tab, retryCount + 1);
+        return fetchAIResponse(query, tab, provider, retryCount + 1);
       }
       throw new Error(getUserFriendlyMessage("network"));
     }
@@ -138,7 +139,7 @@ export async function fetchAIResponse(
     if (retryCount < API_CONFIG.MAX_RETRIES) {
       logDebug(`[ERROR RETRY] ${errorMessage}`);
       await sleep(API_CONFIG.RETRY_DELAY_MS);
-      return fetchAIResponse(query, tab, retryCount + 1);
+      return fetchAIResponse(query, tab, provider, retryCount + 1);
     }
 
     throw new Error(getUserFriendlyMessage("unknown"));
