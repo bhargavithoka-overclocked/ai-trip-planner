@@ -47,8 +47,51 @@ export function validateAIResponse(data: any): AIResult {
       recommendations: Array.isArray(data.recommendations)
         ? data.recommendations.filter((r: unknown): r is string => typeof r === "string")
         : [],
+
+      overview: validateOverview(data.overview),
     };
   } catch {
     return DEFAULT_RESULT;
   }
+}
+
+type Loose = Record<string, unknown>;
+
+const text = (value: unknown) => (typeof value === "string" ? value : "");
+const textList = (value: unknown) =>
+  Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
+const objectList = (value: unknown): Loose[] =>
+  Array.isArray(value) ? value.filter((v): v is Loose => !!v && typeof v === "object") : [];
+
+// The Overview tab is built from this part of the answer, so keep it
+// (it used to be dropped here) but clean up anything the model got wrong.
+function validateOverview(value: unknown): AIResult["overview"] {
+  if (!value || typeof value !== "object") return undefined;
+  const overview = value as Loose;
+  const seasonal = (overview.seasonalNotes ?? {}) as Loose;
+
+  return {
+    bestPlaces: objectList(overview.bestPlaces).map((place) => ({
+      title: text(place.title),
+      description: text(place.description),
+      highlights: textList(place.highlights),
+    })),
+    foodExperiences: objectList(overview.foodExperiences).map((food) => ({
+      name: text(food.name),
+      description: text(food.description),
+      cuisine: text(food.cuisine),
+    })),
+    areasToStay: objectList(overview.areasToStay).map((area) => ({
+      area: text(area.area),
+      vibe: text(area.vibe),
+      priceLevel: text(area.priceLevel),
+      why: text(area.why),
+    })),
+    seasonalNotes: {
+      bestTime: text(seasonal.bestTime),
+      weather: text(seasonal.weather),
+      crowdLevel: text(seasonal.crowdLevel),
+    },
+    tips: textList(overview.tips),
+  };
 }
